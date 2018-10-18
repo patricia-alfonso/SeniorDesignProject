@@ -1,0 +1,2 @@
+export OPENNI2_INCLUDE=/Users/alden/cse4939/OpenNI-MacOSX-x64-2.2/Include
+export OPENNI2_REDIST=/Users/alden/cse4939/OpenNI-MacOSX-x64-2.2/Redist
