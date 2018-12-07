@@ -1,0 +1,2 @@
+#TargetFrameworkVersion=v4.0:PlatformToolSet=v140:EnableManagedIncrementalBuild=false:VCToolArchitecture=Native32Bit:WindowsTargetPlatformVersion=8.1
+Debug|x64|C:\Users\Alden\Documents\CSE\CSE4939\AstraSDK-v2.0.12-b48cd2945b-20180924T205441Z-vs2015-win64\samples\vs2015\sfml\SimpleBodyViewer-SFML\|
