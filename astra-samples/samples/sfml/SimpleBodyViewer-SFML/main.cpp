@@ -17,7 +17,77 @@
 #include <SFML/Graphics.hpp>
 #include <astra/astra.hpp>
 #include <iostream>
+#include <fstream>
 #include <cstring>
+
+char* get_joint_name(astra::Joint joint) {
+
+	char* joint_name;
+	switch (joint.type()) {
+	case astra::JointType::Head:
+		joint_name = "Head";
+		break;
+	case astra::JointType::Neck:
+		joint_name = "Neck";
+		break;
+	case astra::JointType::ShoulderSpine:
+		joint_name = "Spine Top";
+		break;
+	case astra::JointType::LeftShoulder:
+		joint_name = "Left Shoulder";
+		break;
+	case astra::JointType::LeftElbow:
+		joint_name = "Left Elbow";
+		break;
+	case astra::JointType::LeftWrist:
+		joint_name = "Left Wrist";
+		break;
+	case astra::JointType::LeftHand:
+		joint_name = "Left Hand";
+		break;
+	case astra::JointType::RightShoulder:
+		joint_name = "Right Shoulder";
+		break;
+	case astra::JointType::RightElbow:
+		joint_name = "Right Elbow";
+		break;
+	case astra::JointType::RightWrist:
+		joint_name = "Right Wrist";
+		break;
+	case astra::JointType::RightHand:
+		joint_name = "Right Hand";
+		break;
+	case astra::JointType::MidSpine:
+		joint_name = "Spine Middle";
+		break;
+	case astra::JointType::BaseSpine:
+		joint_name = "Spine Base";
+		break;
+	case astra::JointType::LeftHip:
+		joint_name = "Left Hip";
+		break;
+	case astra::JointType::LeftKnee:
+		joint_name = "Left Knee";
+		break;
+	case astra::JointType::LeftFoot:
+		joint_name = "Left Foot";
+		break;
+	case astra::JointType::RightHip:
+		joint_name = "Right Hip";
+		break;
+	case astra::JointType::RightKnee:
+		joint_name = "Right Knee";
+		break;
+	case astra::JointType::RightFoot:
+		joint_name = "Right Foot";
+		break;
+	default:
+		joint_name = "Unknown Joint";
+		break;
+	}
+	return joint_name;
+}
+
 class sfLine : public sf::Drawable
 {
 public:
@@ -220,11 +290,12 @@ public:
 
         for (auto& body : bodies)
         {
-            printf("Processing frame #%d body %d left hand: %u\n",
-                bodyFrame.frame_index(), body.id(), unsigned(body.hand_poses().left_hand()));
+            //printf("Processing frame #%d body %d left hand: %u\n",
+                //bodyFrame.frame_index(), body.id(), unsigned(body.hand_poses().left_hand()));
             for(auto& joint : body.joints())
             {
                 jointPositions_.push_back(joint.depth_position());
+				joint.type();
             }
 
             update_body(body, jointScale);
@@ -406,19 +477,54 @@ public:
         overlayTexture_.update(overlayBuffer_.get());
     }
 
+	void log_data(astra::StreamReader& reader, astra::Frame& frame) {
+
+		frameNumber_++;
+		std::ofstream file;
+		file.open("out.txt", std::ios::out | std::ios::app);
+
+		// Get body data
+		astra::BodyFrame bodyFrame = frame.get<astra::BodyFrame>();
+		const auto& bodies = bodyFrame.bodies();
+
+		// Get depth data
+		astra::DepthFrame depthFrame = frame.get<astra::DepthFrame>();
+		const auto depthData = depthFrame.data();
+		const int frameWidth = depthFrame.width();
+		int depthIndex;
+
+		// Output position (pixel_x, pixel_y, depth) of each joint
+		for (auto& body : bodies)
+		{
+			if (body.joints_enabled()) {
+				file << "Frame number: " << frameNumber_ << std::endl;
+				file << "Body Id: " << std::to_string(body.id()) << std::endl;
+				for (auto& joint : body.joints()) {
+					depthIndex = int(joint.depth_position().x + (joint.depth_position().y * frameWidth));
+
+					file << get_joint_name(joint) << " position: (" << joint.depth_position().x << ", " << joint.depth_position().y << ", " << depthData[depthIndex] << ")" << std::endl;
+				}
+				file << std::endl;
+			}
+		}
+
+		file.close();
+	}
+
     virtual void on_frame_ready(astra::StreamReader& reader,
                                 astra::Frame& frame) override
     {
         processDepth(frame);
         processBodies(frame);
+		log_data(reader, frame);
 
         check_fps();
     }
 
-    void draw_bodies(sf::RenderWindow& window)
+    void draw_bodies(sf::RenderWindow& window, int offset_x, int offset_y)
     {
-        const float scaleX = window.getView().getSize().x / overlayWidth_;
-        const float scaleY = window.getView().getSize().y / overlayHeight_;
+        const float scaleX = (window.getView().getSize().x - offset_x) / overlayWidth_;
+        const float scaleY = (window.getView().getSize().y - offset_y) / overlayHeight_;
 
         sf::RenderStates states;
         sf::Transform transform;
@@ -441,10 +547,14 @@ public:
 
     void draw_to(sf::RenderWindow& window)
     {
+		// used to make space in the window for ui buttons, etc.
+		int offset_x = 0;
+		int offset_y = 0;
+
         if (displayBuffer_ != nullptr)
         {
-            const float scaleX = window.getView().getSize().x / depthWidth_;
-            const float scaleY = window.getView().getSize().y / depthHeight_;
+            const float scaleX = (window.getView().getSize().x - offset_x) / depthWidth_;
+            const float scaleY = (window.getView().getSize().y - offset_y) / depthHeight_;
             sprite_.setScale(scaleX, scaleY);
 
             window.draw(sprite_); // depth
@@ -452,13 +562,13 @@ public:
 
         if (overlayBuffer_ != nullptr)
         {
-            const float scaleX = window.getView().getSize().x / overlayWidth_;
-            const float scaleY = window.getView().getSize().y / overlayHeight_;
+            const float scaleX = (window.getView().getSize().x - offset_x) / overlayWidth_;
+            const float scaleY = (window.getView().getSize().y - offset_y) / overlayHeight_;
             overlaySprite_.setScale(scaleX, scaleY);
             window.draw(overlaySprite_); //bodymask and floormask
         }
 
-        draw_bodies(window);
+        draw_bodies(window, offset_x, offset_y);
     }
 
 private:
@@ -490,6 +600,7 @@ private:
     sf::Texture overlayTexture_;
     sf::Sprite overlaySprite_;
 
+	int frameNumber_ = 0;
 };
 
 astra::DepthStream configure_depth(astra::StreamReader& reader)
@@ -525,7 +636,7 @@ int main(int argc, char** argv)
 #endif
 
     const sf::VideoMode fullScreenMode = sf::VideoMode::getFullscreenModes()[0];
-    const sf::VideoMode windowedMode(1280, 960);
+    const sf::VideoMode windowedMode(1380, 1060);
     bool isFullScreen = false;
 
     astra::StreamSet sensor;
@@ -619,6 +730,9 @@ int main(int argc, char** argv)
                     }
                     bodyStream.set_default_body_features(features);
                     break;
+				case sf::Keyboard::Space:
+					system("pause");
+					break;
                 default:
                     break;
                 }
