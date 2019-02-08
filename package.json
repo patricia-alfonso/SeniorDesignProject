@@ -1,0 +1,23 @@
+{
+  "name": "body_joint_tracker",
+  "version": "1.0.0",
+  "description": "The astra-samples vs2015 project only contains the \"simple body viewer\" source, as this is the source we will be using. The rest of the samples can be found on the Orbbec development website. To build the body viewer, navigate to astra-samples/samples/astra-samples and open astra-samples.sln in vs2015. from there, you can make changes to the code and build the exe.",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "electron ."
+  },
+  "author": "2019 UConn CSE Senior Design Team 1",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^4.0.4"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/patricia-alfonso/SeniorDesignProject.git"
+  },
+  "bugs": {
+    "url": "https://github.com/patricia-alfonso/SeniorDesignProject/issues"
+  },
+  "homepage": "https://github.com/patricia-alfonso/SeniorDesignProject#readme"
+}

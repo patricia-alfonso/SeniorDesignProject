@@ -483,7 +483,10 @@ public:
 
 		frameNumber_++;
 		std::ofstream file;
-		file.open("out.txt", std::ios::out | std::ios::app);
+		std::string file_dir = output_dir_ + patient_name_;
+		CreateDirectory(file_dir.c_str(), NULL);
+		file.open(file_dir + "\\raw_data.txt", std::ios::out | std::ios::app);
+		std::cout << file_dir << std::endl;
 
 		// Get body data
 		astra::BodyFrame bodyFrame = frame.get<astra::BodyFrame>();
@@ -587,6 +590,14 @@ public:
 		paused_ = !paused_;
 	}
 
+	void set_patient_name(std::string name) {
+		patient_name_ = name;
+	}
+
+	void set_output_dir(std::string dir) {
+		output_dir_ = dir;
+	}
+
 private:
 	long double frameDuration_{ 0 };
 	std::clock_t lastTimepoint_{ 0 };
@@ -620,6 +631,8 @@ private:
 	bool paused_ = true;
 	int offset_x_{ 0 };
 	int offset_y_{ 0 };
+	std::string patient_name_ = "Unknown";
+	std::string output_dir_ = workingdir();
 };
 
 astra::DepthStream configure_depth(astra::StreamReader& reader)
@@ -639,7 +652,7 @@ astra::DepthStream configure_depth(astra::StreamReader& reader)
 	return depthStream;
 }
 
-int main(int argc, char** argv) {
+int main(int argc, const char** argv) {
 
 	astra::initialize();
 
@@ -659,6 +672,10 @@ int main(int argc, char** argv) {
 #endif
 
 	BodyVisualizer listener;
+	if (argc >= 3) {
+		listener.set_patient_name(argv[1]);
+		listener.set_output_dir(argv[2]);
+	}
 	listener.set_offsets(RIGHT_OFFSET, BOTTOM_OFFSET);
 
 	const sf::VideoMode fullScreenMode = sf::VideoMode::getFullscreenModes()[0];
