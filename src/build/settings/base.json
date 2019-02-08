@@ -1,6 +1,0 @@
-{
-    "app_name": "PortableMotionAnalysis",
-    "main_module": "src/main/python/main.py",
-    "author": "SeniorDesignTeam1",
-    "version": "0.0.1"
-}
