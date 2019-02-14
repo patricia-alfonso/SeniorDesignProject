@@ -10,4 +10,6 @@ astra-body-tracker/x64/Debug/astra-body-tracker.pdb
 astra-body-tracker/astra-body-tracker/x64/Debug/vc141.pdb
 astra-body-tracker/astra-body-tracker/x64/Debug/astra-body-tracker.log
 astra-body-tracker/astra-body-tracker/x64/Debug/astra-body-tracker.Build.CppClean.log
-astra-body-tracker/astra-body-tracker/x64/Debug/astra-body-tracker.Build.CppClean.log
+node_modules/
+astra.log
+dist/
