@@ -2,18 +2,24 @@
 <html>
     <head>
         <meta charset="UTF-8">
-        <title>Hello World</title>
+        <title>Body Joint Tracker</title>
 
         <script>
             delete module.exports
         </script>
         <script src="https://code.jquery.com/jquery-3.2.1.js"></script>
         <script src="./window.js" charset="utf-8"></script>
+        <link rel="stylesheet" href="./css/add-ons1.css">
     </head>
     <body>
-        <h1>Hello, World.</h1>
-        <textarea rows="1" id="patient-name" placeholder="Please enter patient name"></textarea>
-        <textarea rows="1" id="output-dir" placeholder = "Please enter output directory"></textarea>
-        <button id="start-astra">Start Astra</button>
+        <div class="block form-group">
+            <label for="patient-name">Patient Name:</label>
+            <textarea rows="1" id="patient-name" placeholder=""></textarea>
+        </div>
+        <div class="block form-group">
+            <label for="output-dir">Output Directory:</label>
+            <textarea rows="1" id="output-dir" placeholder = ""></textarea>
+        </div>
+        <button class="action" id="start-astra">Start Astra</button>
     </body>
 </html>
