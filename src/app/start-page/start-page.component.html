@@ -1,0 +1,19 @@
+<div class="row justify-content-center p-1">
+  <div class="col-2">
+      <button mat-raised-button color="primary" [matMenuTriggerFor]="patients">Select Patient</button>
+      <mat-menu #patients="matMenu">
+          <button mat-menu-item>Patient 1</button>
+          <button mat-menu-item>Patient 2</button>
+      </mat-menu>
+  </div>
+  <div class="col-2">
+    <button mat-raised-button color="primary">New Patient</button>
+  </div>
+
+</div>
+
+<div class="row justify-content-center p-3">
+  <button mat-raised-button color="accent" routerLink ='../test'>START</button>
+
+</div>
+

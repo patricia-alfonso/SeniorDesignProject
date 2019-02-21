@@ -4,13 +4,10 @@ import { Component, OnInit } from '@angular/core';
 
 @Component({
   selector: 'App',
-  template:
-  `<div>
-    <h2>Welcome to {{name}} with Angular2!</h2>
-  </div>`
+  templateUrl: './app.component.html',
 })
 export class AppComponent implements OnInit {
-  public readonly name = 'Atstra Body Tracker';
+  public readonly name = 'Astra Body Tracker';
 
   ngOnInit(): void {
     console.log('component initialized');
