@@ -4,6 +4,12 @@
 #define STREAM_SCALE 2
 #define RIGHT_OFFSET 150
 #define BOTTOM_OFFSET 0
+#define FOV_H 60
+#define FOV_V 49.5
+#define PI 3.14159265
+#define ASTRA_X 0
+#define ASTRA_Y 3349.3
+#define ASTRA_Z 0
 
 #include <SFML/Graphics.hpp>
 #include <astra/astra.hpp>
@@ -12,6 +18,7 @@
 #include <cstring>
 #include "button.cpp"
 #include <Windows.h>
+#include <math.h>
 
 std::string workingdir(bool print = false)
 {
@@ -496,18 +503,26 @@ public:
 		astra::DepthFrame depthFrame = frame.get<astra::DepthFrame>();
 		const auto depthData = depthFrame.data();
 		const int frameWidth = depthFrame.width();
-		int depthIndex;
 
 		// Output position (pixel_x, pixel_y, depth) of each joint
+		float x_pixel, y_pixel, depth;
+		double x, y, z;
 		for (auto& body : bodies)
 		{
 			if (body.joints_enabled()) {
 				file << "Frame number: " << frameNumber_ << std::endl;
 				file << "Body Id: " << std::to_string(body.id()) << std::endl;
 				for (auto& joint : body.joints()) {
-					depthIndex = int(joint.depth_position().x + (joint.depth_position().y * frameWidth));
+					x_pixel = joint.depth_position().x;
+					y_pixel = joint.depth_position().y;
+					depth = depthData[int(x_pixel + (y_pixel * frameWidth))];
+					x = ASTRA_X + depth * sin(((x_pixel - 320) / 320) * (FOV_H / 2) * PI / 180);
+					y = ASTRA_Y + depth * sin(((240 - y_pixel) / 240) * (FOV_V / 2) * PI / 180);
+					z = ASTRA_Z + sqrt(pow(depth, 2) - pow(x, 2) - pow(y, 2));
 
-					file << get_joint_name(joint) << " position: (" << joint.depth_position().x << ", " << joint.depth_position().y << ", " << depthData[depthIndex] << ")" << std::endl;
+					if (!(x == ASTRA_X && y == ASTRA_Y && z == ASTRA_Z)) {
+						file << get_joint_name(joint) << " position: (" << x << ", " << y << ", " << z << ")" << std::endl;
+					}
 				}
 				file << std::endl;
 			}
