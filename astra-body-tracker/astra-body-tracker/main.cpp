@@ -507,6 +507,9 @@ public:
 		// Output position (pixel_x, pixel_y, depth) of each joint
 		float x_pixel, y_pixel, depth;
 		double x, y, z;
+		double deg_shoulders;
+		double x_L = 10000, y_L, z_L;
+		double x_R = 10000, y_R, z_R;
 		for (auto& body : bodies)
 		{
 			if (body.joints_enabled()) {
@@ -524,9 +527,32 @@ public:
 
 					if (!(x == ASTRA_X && y == ASTRA_Y && z == ASTRA_Z)) {
 						file << get_joint_name(joint) << " position: (" << x << ", " << y << ", " << z << ")" << std::endl;
+						if (get_joint_name(joint) == "Left Shoulder") {
+							x_L = x;
+							y_L = y;
+							z_L = z;
+							//std::cout << x_L <<"," << y_L << "," << z_L ;
+
+						}
+						if (get_joint_name(joint) == "Right Shoulder") {
+							x_R = x;
+							y_R = y;
+							z_R = z;
+						}
+						
+
 					}
 				}
+				//deg_shoulders = asin()
+				if (x_L != 10000 && x_R != 10000) {
+					deg_shoulders = asin((y_R - y_L) / (sqrt(pow((x_R - x_L), 2) + pow((y_R - y_L), 2) + pow((z_R - z_L), 2)))) * 180 / PI;
+					file << " scolios Calc Sholder Degree: " << deg_shoulders;
+
+				}
+				x_L = 10000;
+				x_R = 10000;
 				file << std::endl;
+				
 			}
 		}
 
