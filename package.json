@@ -2,8 +2,8 @@
   "name": "bodytracker",
   "productName": "bodytracker",
   "version": "1.0.0",
-  "description": "Senior Desgin Project bodytracker",
-  "author": "philipmurray",
+  "description": "An application which will track the joints of a patient using the Orbbec Astra.",
+  "author": "2019 UConn CSE Senior Design Team 1",
   "main": "src/electronMain.js",
   "scripts": {
     "ng": "ng",
@@ -15,7 +15,8 @@
     "forge-start": "electron-forge start",
     "package": "electron-forge package",
     "make": "electron-forge make",
-    "build-watch": "ng build --op dist -w"
+    "build-watch": "ng build --op dist -w",
+    "dist": "electron-builder"
   },
   "config": {
     "forge": {
@@ -71,6 +72,10 @@
     "tslib": "^1.9.0",
     "zone.js": "~0.8.26"
   },
+  "repository": "git+https://github.com/patricia-alfonso/SeniorDesignProject.git",
+  "bugs": {
+    "url": "https://github.com/patricia-alfonso/SeniorDesignProject/issues"
+  },
   "devDependencies": {
     "@angular-devkit/build-angular": "~0.13.0",
     "@angular/cli": "~7.3.2",
@@ -80,9 +85,10 @@
     "@types/jasmine": "~2.8.8",
     "@types/jasminewd2": "~2.0.3",
     "codelyzer": "~4.5.0",
-    "electron": "^2.0.0",
+    "electron": "^4.0.4",
     "electron-forge": "^5.2.0",
     "electron-prebuilt-compile": "2.0.0",
+    "electron-builder": "^20.38.5",
     "jasmine-core": "~2.99.1",
     "jasmine-spec-reporter": "~4.2.1",
     "karma": "~3.1.1",
