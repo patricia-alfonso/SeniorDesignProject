@@ -516,9 +516,11 @@ public:
 					x_pixel = joint.depth_position().x;
 					y_pixel = joint.depth_position().y;
 					depth = depthData[int(x_pixel + (y_pixel * frameWidth))];
-					x = ASTRA_X + depth * sin(((x_pixel - 320) / 320) * (FOV_H / 2) * PI / 180);
-					y = ASTRA_Y + depth * sin(((240 - y_pixel) / 240) * (FOV_V / 2) * PI / 180);
+					x = depth * sin(((x_pixel - 320) / 320) * (FOV_H / 2) * PI / 180);
+					y = depth * sin(((240 - y_pixel) / 240) * (FOV_V / 2) * PI / 180);
 					z = ASTRA_Z + sqrt(pow(depth, 2) - pow(x, 2) - pow(y, 2));
+                    x += ASTRA_X;
+                    y += ASTRA_Y;
 
 					if (!(x == ASTRA_X && y == ASTRA_Y && z == ASTRA_Z)) {
 						file << get_joint_name(joint) << " position: (" << x << ", " << y << ", " << z << ")" << std::endl;
