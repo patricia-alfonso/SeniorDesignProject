@@ -1,0 +1,20 @@
+input[type=text] {
+  padding: 0;
+  height: 30px;
+  position: relative;
+  left: 0;
+  outline: black;
+  color: black;
+  font-size: 16px;
+  text-align: center;
+}
+
+.textbox{
+  margin-left: -100px;
+  margin-right: -100px;
+  width: 200px;
+  height: 200px;
+  position: relative;
+  top: 50%;
+  left: 50%;
+}

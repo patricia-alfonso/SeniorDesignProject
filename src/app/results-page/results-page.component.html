@@ -1,4 +1,33 @@
-<p>
-  results-page works!
-</p>
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Results</title>
+        <script> delete module.exports</script>
+        <script>
+          var calculated_res = 0;
+          var patient = "John";
+          function res_color(x) {
+            if (x < 70) {
+              document.getElementById("resultText").style.background="red";
+            } else if (x < 90) {
+              document.getElementById("resultText").style.background="yellow";
+            } else {
+              document.getElementById("resultText").style.background="green";
+            }
+          }
+        </script>
+        <link rel="stylesheet" href="./css/add-ons1.css">
+        <link rel="stylesheet" href="./css/results-page.component.css">
+    </head>
+    <body>
+        <input type="text" class="textbox" id="patient-name" value="John" readonly="readonly" style="color:black"></input>
+        <input type="text" class="textbox" id="resultText" value="Results" readonly="readonly" style="color:black"></div>
+        <script>
+          res_color(calculated_res);
+        </script>
+
+        <button class="action" id="start-astra">Repeat Test</button>
+    </body>
+</html>
 <button mat-raised-button color="primary" routerLink ='../home'>Done</button>
