@@ -490,9 +490,11 @@ public:
 
 		frameNumber_++;
 		std::ofstream file;
+		std::ofstream raw;
 		std::string file_dir = output_dir_ + patient_name_;
 		CreateDirectory(file_dir.c_str(), NULL);
-		file.open(file_dir + "\\raw_data.txt", std::ios::out | std::ios::app);
+		file.open(file_dir + "\\astra_out.txt", std::ios::out | std::ios::app);
+		raw.open(file_dir + "\\raw_data.txt", std::ios::out | std::ios::app);
 		std::cout << file_dir << std::endl;
 
 		// Get body data
@@ -505,7 +507,6 @@ public:
 		const int frameWidth = depthFrame.width();
 
 		// Output position (pixel_x, pixel_y, depth) of each joint
-		float x_pixel, y_pixel, depth;
 		double x, y, z;
 		double deg_shoulders;
 		double x_L = 10000, y_L, z_L;
@@ -516,42 +517,36 @@ public:
 				file << "Frame number: " << frameNumber_ << std::endl;
 				file << "Body Id: " << std::to_string(body.id()) << std::endl;
 				for (auto& joint : body.joints()) {
-					x_pixel = joint.depth_position().x;
-					y_pixel = joint.depth_position().y;
-					depth = depthData[int(x_pixel + (y_pixel * frameWidth))];
-					x = depth * sin(((x_pixel - 320) / 320) * (FOV_H / 2) * PI / 180);
-					y = depth * sin(((240 - y_pixel) / 240) * (FOV_V / 2) * PI / 180);
-					z = ASTRA_Z + sqrt(pow(depth, 2) - pow(x, 2) - pow(y, 2));
-                    x += ASTRA_X;
-                    y += ASTRA_Y;
+					x = joint.world_position().x;
+					y = joint.world_position().y;
+					z = joint.world_position().z;
 
 					if (!(x == ASTRA_X && y == ASTRA_Y && z == ASTRA_Z)) {
 						file << get_joint_name(joint) << " position: (" << x << ", " << y << ", " << z << ")" << std::endl;
+						raw << get_joint_name(joint) << "," << x << "," << y << "," << z << ";";
+
 						if (get_joint_name(joint) == "Left Shoulder") {
 							x_L = x;
 							y_L = y;
 							z_L = z;
-							//std::cout << x_L <<"," << y_L << "," << z_L ;
-
 						}
 						if (get_joint_name(joint) == "Right Shoulder") {
 							x_R = x;
 							y_R = y;
 							z_R = z;
 						}
-						
-
 					}
 				}
 				//deg_shoulders = asin()
 				if (x_L != 10000 && x_R != 10000) {
 					deg_shoulders = asin((y_R - y_L) / (sqrt(pow((x_R - x_L), 2) + pow((y_R - y_L), 2) + pow((z_R - z_L), 2)))) * 180 / PI;
-					file << " scolios Calc Sholder Degree: " << deg_shoulders;
+					file << "Scoliosis Shoulder Angle: " << deg_shoulders << std::endl;
 
 				}
 				x_L = 10000;
 				x_R = 10000;
 				file << std::endl;
+				raw << std::endl;
 				
 			}
 		}
