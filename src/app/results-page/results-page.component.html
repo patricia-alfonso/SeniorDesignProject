@@ -1,31 +1,15 @@
-<!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="UTF-8">
-        <title>Results</title>
-        <script> delete module.exports</script>
-        <script>
-          var calculated_res = 0;
-          var patient = "John";
-          function res_color(x) {
-            if (x < 70) {
-              document.getElementById("resultText").style.background="red";
-            } else if (x < 90) {
-              document.getElementById("resultText").style.background="yellow";
-            } else {
-              document.getElementById("resultText").style.background="green";
-            }
-          }
-        </script>
-    </head>
-    <body>
-        <input type="text" class="textbox" id="patient-name" value="John" readonly="readonly" style="color:black">
-        <input type="text" class="textbox" id="resultText" value="Results" readonly="readonly" style="color:black">
-        <script>
-          res_color(calculated_res);
-        </script>
-
-        <button class="action" id="start-astra">Repeat Test</button>
-    </body>
-</html>
-<button mat-raised-button color="primary" routerLink ='../home'>Done</button>
+<body>
+    <div class="container-fluid">
+      <div class="row justify-content-center">
+        <div class="col-4">
+          <div class="p-3 mb-2 bg-dark text-white">John</div>
+        </div>
+        <div class="col-4">
+          <div id="resultText">Results</div>
+        </div>
+      </div>
+      <div class="row justify-content-center">
+          <button class="action" id="start-astra">Repeat Test</button>
+      </div>
+    </div>
+</body>
