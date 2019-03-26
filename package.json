@@ -1,104 +1,15 @@
 {
-  "name": "bodytracker",
-  "productName": "bodytracker",
+  "name": "astra-body-tracker",
   "version": "1.0.0",
-  "description": "An application which will track the joints of a patient using the Orbbec Astra.",
-  "author": "2019 UConn CSE Senior Design Team 1",
-  "main": "src/electronMain.js",
-  "scripts": {
-    "ng": "ng",
-    "start": "ng serve",
-    "build": "ng build",
-    "test": "ng test",
-    "lint": "ng lint",
-    "e2e": "ng e2e",
-    "forge-start": "electron-forge start",
-    "package": "electron-forge package",
-    "make": "electron-forge make",
-    "build-watch": "ng build --op dist -w",
-    "dist": "electron-builder"
-  },
-  "config": {
-    "forge": {
-      "make_targets": {
-        "win32": [
-          "squirrel"
-        ],
-        "darwin": [
-          "zip"
-        ],
-        "linux": [
-          "deb",
-          "rpm"
-        ]
-      },
-      "electronPackagerConfig": {
-        "packageManager": "npm"
-      },
-      "electronWinstallerConfig": {
-        "name": "bodytracker"
-      },
-      "electronInstallerDebian": {},
-      "electronInstallerRedhat": {},
-      "github_repository": {
-        "owner": "",
-        "name": ""
-      },
-      "windowsStoreConfig": {
-        "packageName": "",
-        "name": "bodytracker"
-      }
-    }
-  },
-  "private": true,
+  "main": "main.js",
+  "repository": "https://github.com/patricia-alfonso/SeniorDesignProject.git",
+  "author": "Senior Design Team 1",
+  "license": "MIT",
   "dependencies": {
-    "@angular/animations": "^7.2.5",
-    "@angular/cdk": "^7.3.2",
-    "@angular/common": "~7.2.0",
-    "@angular/compiler": "~7.2.0",
-    "@angular/core": "~7.2.0",
-    "@angular/forms": "~7.2.0",
-    "@angular/material": "^7.3.2",
-    "@angular/platform-browser": "~7.2.0",
-    "@angular/platform-browser-dynamic": "~7.2.0",
-    "@angular/router": "~7.2.0",
-    "bootstrap": "^3.4.1",
-    "core-js": "^2.5.4",
-    "electron-compile": "^6.4.4",
-    "electron-devtools-installer": "^2.2.4",
-    "electron-squirrel-startup": "^1.0.0",
-    "jquery": "^3.3.1",
-    "rxjs": "~6.3.3",
-    "tslib": "^1.9.0",
-    "zone.js": "~0.8.26"
+    "electron": "^4.1.0",
+    "three": "^0.102.1"
   },
-  "repository": "git+https://github.com/patricia-alfonso/SeniorDesignProject.git",
-  "bugs": {
-    "url": "https://github.com/patricia-alfonso/SeniorDesignProject/issues"
-  },
-  "devDependencies": {
-    "@angular-devkit/build-angular": "~0.13.0",
-    "@angular/cli": "~7.3.2",
-    "@angular/compiler-cli": "~7.2.0",
-    "@angular/language-service": "~7.2.0",
-    "@types/node": "~8.9.4",
-    "@types/jasmine": "~2.8.8",
-    "@types/jasminewd2": "~2.0.3",
-    "codelyzer": "~4.5.0",
-    "electron": "^4.0.4",
-    "electron-forge": "^5.2.0",
-    "electron-prebuilt-compile": "2.0.0",
-    "electron-builder": "^20.38.5",
-    "jasmine-core": "~2.99.1",
-    "jasmine-spec-reporter": "~4.2.1",
-    "karma": "~3.1.1",
-    "karma-chrome-launcher": "~2.2.0",
-    "karma-coverage-istanbul-reporter": "~2.0.1",
-    "karma-jasmine": "~1.1.2",
-    "karma-jasmine-html-reporter": "^0.2.2",
-    "protractor": "~5.4.0",
-    "ts-node": "~7.0.0",
-    "tslint": "~5.11.0",
-    "typescript": "~3.2.2"
+  "scripts": {
+    "start": "electron ."
   }
 }
