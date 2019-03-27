@@ -1,0 +1,12 @@
+#options {
+    -webkit-app-region: drag;
+}
+
+.btn{
+    cursor: pointer;
+    -webkit-app-region: no-drag;
+}
+
+.form-control{
+    margin-bottom: 10px;
+}

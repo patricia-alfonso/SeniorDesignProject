@@ -2,24 +2,33 @@
 <html>
     <head>
         <meta charset="UTF-8">
-        <title>Body Joint Tracker</title>
+        <title>Astra Body Tracker</title>
 
         <script>
             delete module.exports
         </script>
-        <script src="https://code.jquery.com/jquery-3.2.1.js"></script>
+        <script src="./includes/jquery-3.2.1.js"></script>
         <script src="./window.js" charset="utf-8"></script>
-        <link rel="stylesheet" href="./css/add-ons1.css">
+        <link rel="stylesheet" href="./css/style.css">
+        <link rel="stylesheet" href="./css/bootstrap.min.css">
     </head>
     <body>
-        <div class="block form-group">
-            <label for="patient-name">Patient Name:</label>
-            <textarea rows="1" id="patient-name" placeholder=""></textarea>
+        <header class="navbar navbar-expand navbar-dark flex-column flex-sm-row" id="options">
+            <div class="btn" id="home">Home</div>
+            <div class="btn ml-auto" id="quit">Quit</div>
+        </header>
+
+        <div class = "container-fluid" id="page-container">
+            <div class="row flex-xl-nowrap h-100">
+                <div class="col-1 sidebar"></div>
+                <main class="col-10" role="main">
+                    <h1 id="title-text"></h1>
+                    <div id="main-display">
+                        <p>main display</p>
+                    </div>
+                </main>
+                <div class="col-1"></div>
+            </div>
         </div>
-        <div class="block form-group">
-            <label for="output-dir">Output Directory:</label>
-            <textarea rows="1" id="output-dir" placeholder = ""></textarea>
-        </div>
-        <button class="action" id="start-astra">Start Astra</button>
     </body>
 </html>
