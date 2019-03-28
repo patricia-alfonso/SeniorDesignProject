@@ -75,6 +75,7 @@ function start(){
     
     $('#start-astra').on('click', () => {
         console.log('start astra')
+
         var patient = $('#select-patient')[0].value
         if (patient === "Create New Patient"){
             patient = $('#patient-name')[0].value
@@ -83,29 +84,14 @@ function start(){
                 return
             }
         }
-        var output = dir + '/' + patient + '/'
 
-        if (!fs.existsSync(output)){
-            fs.mkdirSync(output)
+        current_patient = {
+            "name": patient,
+            "dir": dir + '/' + patient + '/'
         }
 
-        const p = spawn(".\\astra-body-tracker\\x64\\Debug\\astra-body-tracker.exe", [patient, output])
         state = 'astra-running'
         update()
-
-        p.stdout.on('data', (data) => {
-            console.log('stdout:' + data)
-        })
-
-        p.on('close', (code) => {
-            console.log('child process exited with code ' + code)
-            current_patient = {
-                "name": patient,
-                "dir": output
-            }
-            state = 'astra-done'
-            update()
-        })
     })
 }
 
@@ -120,6 +106,48 @@ function displayPatientName(){
 
 function waiting(){
     $('#title-text')[0].innerHTML = "Astra is running..."
+
+    if (!fs.existsSync(current_patient.dir)){
+        fs.mkdirSync(current_patient.dir) 
+    }
+
+    const body_tracker = spawn(".\\astra-body-tracker\\x64\\Debug\\astra-body-tracker.exe", [current_patient.dir])
+
+    var display = $('#main-display')
+    display.height(display.width() * 3 / 4)
+
+    var scene = new three.Scene()
+    var camera = new three.PerspectiveCamera(49.5, 4/3, 0.1, 8000)
+
+    var renderer = new three.WebGLRenderer()
+    renderer.setSize( display.width(), display.height())
+    display.append(renderer.domElement);
+    display.append('<button type="button" class="btn btn-primary btn-lg btn-block" id="astra-exit">Done</button>');
+    resultsAnimate()
+
+    body_tracker.stdout.on('data', (data) => {
+        //console.log('stdout:' + data)
+        console.log(JSON.parse(data))
+
+        fs.appendFileSync(current_patient.dir + "raw_data.txt", data)
+        frame = JSON.parse(data)
+        scene = addJoints(scene, frame)
+    })
+
+    $('#astra-exit').on('click', () => {
+        body_tracker.kill()
+    })
+
+    body_tracker.on('close', (code) => {
+        console.log('child process exited with code ' + code)
+        state = 'astra-done'
+        update()
+    })
+
+    function resultsAnimate(){
+        requestAnimationFrame(resultsAnimate)
+        renderer.render(scene, camera)
+    }
 }
 
 function results(){
@@ -147,14 +175,14 @@ function results(){
         scene = addJoints(scene, frame)
         setTimeout( () => {
             requestAnimationFrame( () => {
-                if (frame_number < frames.length){
+                if (frame_number < frames.length - 1){
                     resultsAnimate(frames, frame_number + 1)
                 }
                 else {
                     resultsAnimate(frames, 0)
                 }
             })
-        }, 100)
+        }, frame.time)
         renderer.render(scene, camera)
     }
 }
@@ -162,12 +190,13 @@ function results(){
 function addJoints(scene, frame){
     var geometry = new three.SphereGeometry(30)
     var material = new three.MeshBasicMaterial( { color: 'white' } )
+    var joints = frame.joints
     
     while (scene.children.length > 0){
         scene.remove(scene.children[0])
     }
 
-    for (var joint in frame){
+    for (var joint in joints){
         var point
         if (joint == "Head"){
             var mat = new three.MeshBasicMaterial( { color: 'red' } )
@@ -177,7 +206,7 @@ function addJoints(scene, frame){
         else {
             point = new three.Mesh(geometry, material)
         }
-        point.position.set(frame[joint].x, frame[joint].y, -frame[joint].z)
+        point.position.set(joints[joint].x, joints[joint].y, -joints[joint].z)
         point.name = joint
         scene.add(point)
     }
@@ -193,18 +222,8 @@ function processResults(){
         var frames = []
         
         readStream.on('line', (line) => {
-            var joints = {}
-            line.split(";").forEach((joint) => {
-                joint = joint.split(",")
-                if (joint.length == 4){
-                    joints[joint[0]] = {
-                        "x": parseFloat(joint[1]),
-                        "y": parseFloat(joint[2]),
-                        "z": parseFloat(joint[3])
-                    }
-                }
-            })
-            frames.push(joints)
+            var frame = JSON.parse(line)
+            frames.push(frame)
         })
 
         readStream.on('close', () => {
