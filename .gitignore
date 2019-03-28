@@ -6,7 +6,8 @@ dist/
 
 #astra files
 astra-body-tracker/astra-body-tracker/astra-body-tracker.vcxproj
-astra-body-tracker/.vs/astra-body-tracker/v15/
+astra-body-tracker/astra-body-tracker.VC.db
+astra-body-tracker/.vs/astra-body-tracker/
 astra-body-tracker/astra-body-tracker/x64/Debug/astra-bo.CA94590F.tlog/
 astra-body-tracker/x64/Debug/astra-body-tracker.exe
 astra-body-tracker/astra-body-tracker/x64/Debug/button.obj
@@ -19,3 +20,6 @@ astra-body-tracker/astra-body-tracker/x64/Debug/vc141.pdb
 astra-body-tracker/astra-body-tracker/x64/Debug/astra-body-tracker.log
 astra-body-tracker/astra-body-tracker/x64/Debug/astra-body-tracker.Build.CppClean.log
 astra.log
+patients/
+*raw_data.txt
+*astra_out.txt
