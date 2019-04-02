@@ -1,6 +1,7 @@
 const { ipcRenderer } = require('electron')
 const { spawn } = require('child_process')
 var three = require('three')
+var OrbitControls = require('three-orbitcontrols')
 var skip = require('./dev').skipToResults
 var fs = require('fs'),
     readline = require('readline')
@@ -90,6 +91,9 @@ function start(){
             "dir": dir + '/' + patient + '/'
         }
 
+        if (fs.existsSync(current_patient.dir + 'raw_data.txt')){
+            fs.unlinkSync(current_patient.dir + 'raw_data.txt')
+        }
         state = 'astra-running'
         update()
     })
@@ -118,6 +122,8 @@ function waiting(){
 
     var scene = new three.Scene()
     var camera = new three.PerspectiveCamera(49.5, 4/3, 0.1, 8000)
+    camera.position.set(0, 0, 0)
+    camera.lookAt(0, 0, 1)
 
     var renderer = new three.WebGLRenderer()
     renderer.setSize( display.width(), display.height())
@@ -126,11 +132,13 @@ function waiting(){
     resultsAnimate()
 
     body_tracker.stdout.on('data', (data) => {
-        //console.log('stdout:' + data)
-        console.log(JSON.parse(data))
-
-        fs.appendFileSync(current_patient.dir + "raw_data.txt", data)
         frame = JSON.parse(data)
+        for (joint in frame.joints){
+            if (frame.joints[joint].z <= 400){
+                delete frame.joints[joint]
+            }
+        }
+        fs.appendFileSync(current_patient.dir + "raw_data.txt", JSON.stringify(frame) + "\n")
         scene = addJoints(scene, frame)
     })
 
@@ -158,14 +166,33 @@ function results(){
 
     var scene = new three.Scene()
     var camera = new three.PerspectiveCamera(49.5, 4/3, 0.1, 8000)
+    camera.position.set(0, 0, 0)
+    camera.lookAt(0, 0, 1)
 
     var renderer = new three.WebGLRenderer()
     renderer.setSize( display.width(), display.height())
+
+    controls = new three.OrbitControls( camera, renderer.domElement )
+
+    controls.enableDamping = true
+    controls.dampingFactor = 1
+
+    controls.screenSpacePanning = false
+    controls.maxPolarAngle = Math.PI / 2
+
     display.append(renderer.domElement);
 
+    var geometry = new three.PlaneGeometry( 3000, 3000, 32 );
+    var material = new three.MeshBasicMaterial( {color: 0x555555, side: three.DoubleSide} );
+    var plane = new three.Mesh( geometry, material );
+    plane.lookAt(0, 1, 0);
+    
     (async () => {
         frames = await processResults()
         resultsAnimate(frames, 0)
+        controls.target = new three.Vector3(0, 0, frames.z_offset)
+        plane.position.set(0, frames.y_offset, frames.z_offset)
+        scene.add( plane );
     })()
 
     // This function needs to be defined inside the results() function 
@@ -173,6 +200,7 @@ function results(){
     function resultsAnimate(frames, frame_number){
         var frame = frames[frame_number]
         scene = addJoints(scene, frame)
+        controls.update()
         setTimeout( () => {
             requestAnimationFrame( () => {
                 if (frame_number < frames.length - 1){
@@ -192,11 +220,8 @@ function addJoints(scene, frame){
     var material = new three.MeshBasicMaterial( { color: 'white' } )
     var joints = frame.joints
     
-    while (scene.children.length > 0){
-        scene.remove(scene.children[0])
-    }
-
     for (var joint in joints){
+        scene.remove(scene.getObjectByName(joint))
         var point
         if (joint == "Head"){
             var mat = new three.MeshBasicMaterial( { color: 'red' } )
@@ -206,7 +231,7 @@ function addJoints(scene, frame){
         else {
             point = new three.Mesh(geometry, material)
         }
-        point.position.set(joints[joint].x, joints[joint].y, -joints[joint].z)
+        point.position.set(joints[joint].x, joints[joint].y, joints[joint].z)
         point.name = joint
         scene.add(point)
     }
@@ -219,14 +244,27 @@ function processResults(){
             input: fs.createReadStream(current_patient.dir + 'raw_data.txt')
         })
         
-        var frames = []
+        var frames = {}
+        frames.length = 0
+        frames.z_offset = 0
+        frames.y_offset = 0
+        var total_joints = 0
         
         readStream.on('line', (line) => {
             var frame = JSON.parse(line)
-            frames.push(frame)
+            frames[frames.length] = frame
+            for (var joint in frame.joints){
+                frames.z_offset += frame.joints[joint].z
+                total_joints++
+                if ((joint == "Right Foot" || joint == "Left Foot") && frame.joints[joint].y < frames.y_offset) {
+                    frames.y_offset = frame.joints[joint].y
+                }
+            }
+            frames.length++
         })
 
         readStream.on('close', () => {
+            frames.z_offset = frames.z_offset / total_joints
             resolve(frames)
         })
     })
