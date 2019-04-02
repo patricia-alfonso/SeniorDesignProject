@@ -6,8 +6,10 @@
   "author": "Senior Design Team 1",
   "license": "MIT",
   "dependencies": {
+    "double-slider": "^2.0.0",
     "electron": "^4.1.0",
-    "three": "^0.102.1"
+    "three": "^0.102.1",
+    "three-orbitcontrols": "^2.102.1"
   },
   "scripts": {
     "start": "electron ."
