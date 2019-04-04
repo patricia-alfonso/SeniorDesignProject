@@ -140,6 +140,7 @@ function waiting(){
         }
         fs.appendFileSync(current_patient.dir + "raw_data.txt", JSON.stringify(frame) + "\n")
         scene = addJoints(scene, frame)
+        scene = addBones(scene, frame)
     })
 
     $('#astra-exit').on('click', () => {
@@ -200,6 +201,7 @@ function results(){
     function resultsAnimate(frames, frame_number){
         var frame = frames[frame_number]
         scene = addJoints(scene, frame)
+        scene = addBones(scene, frame)
         controls.update()
         setTimeout( () => {
             requestAnimationFrame( () => {
@@ -235,6 +237,50 @@ function addJoints(scene, frame){
         point.name = joint
         scene.add(point)
     }
+    return scene
+}
+
+function addBones(scene, frame){
+    while (scene.getObjectByName("bone")){
+        scene.remove(scene.getObjectByName("bone"))
+    }
+    
+    var createBone = (joint1, joint2) => {
+        if (joint1 && joint2){
+            var point1 = new three.Vector3(joint1.x, joint1.y, joint1.z)
+            var point2 = new three.Vector3(joint2.x, joint2.y, joint2.z)
+            var direction = new three.Vector3().subVectors(point2, point1)
+            var helper = new three.ArrowHelper(direction.clone().normalize(), point1);
+    
+            var geometry = new three.CylinderGeometry(15, 15, direction.length(), 3, 1)
+            var bone = new three.Mesh(geometry, new three.MeshBasicMaterial( { color: 'white' } ))
+    
+            bone.setRotationFromEuler(new three.Euler().setFromQuaternion(helper.quaternion))
+            bone.position.set((point1.x + point2.x) / 2, (point1.y + point2.y) / 2, (point1.z + point2.z) / 2)
+            bone.name = "bone"
+            scene.add(bone)
+        }
+    }
+    var joints = frame.joints
+    createBone(joints.Head, joints.Neck)
+    createBone(joints.Neck, joints["Spine Top"])
+    createBone(joints["Spine Top"], joints["Spine Middle"])
+    createBone(joints["Spine Middle"], joints["Spine Base"])
+    createBone(joints["Spine Top"], joints["Left Shoulder"])
+    createBone(joints["Spine Top"], joints["Right Shoulder"])
+    createBone(joints["Left Shoulder"], joints["Left Elbow"])
+    createBone(joints["Left Elbow"], joints["Left Wrist"])
+    createBone(joints["Left Wrist"], joints["Left Hand"])
+    createBone(joints["Right Shoulder"], joints["Right Elbow"])
+    createBone(joints["Right Elbow"], joints["Right Wrist"])
+    createBone(joints["Right Wrist"], joints["Right Hand"])
+    createBone(joints["Spine Base"], joints["Left Hip"])
+    createBone(joints["Spine Base"], joints["Right Hip"])
+    createBone(joints["Left Hip"], joints["Left Knee"])
+    createBone(joints["Left Knee"], joints["Left Foot"])
+    createBone(joints["Right Hip"], joints["Right Knee"])
+    createBone(joints["Right Knee"], joints["Right Foot"])
+
     return scene
 }
 
