@@ -1,4 +1,4 @@
-var DoubleSlider = require( 'double-slider')
+var DoubleSlider = require('double-slider')
 const { ipcRenderer } = require('electron')
 const { spawn } = require('child_process')
 var three = require('three')
@@ -11,7 +11,7 @@ var state = 'start'
 var dir = './patients'
 var patient_dirs, current_patient
 // DEV ONLY
-//var {state, current_patient} = skip()
+var {state, current_patient} = skip()
 
 getPatientDirs()
 
@@ -162,35 +162,10 @@ function waiting(){
 
 function results(){
     $('#title-text')[0].innerHTML = "Astra Results: " + current_patient.name
-	
-	
-	// need lOF to be number of lines in raw_data
-	// processNumLines works, but retuns a promise object that breaks things
-	
-//	const lOF = processNumLines()
-	const lOF = 200
-
-	console.log(`range is: ${lOF}`)
-
-	$('#main-display')[0].innerHTML = `
-		<div name = 'my-slider' id = "my-slider"
-			data-min = "0"
-			data-max = "100"
-			data-range = ${lOF}
-		></div>
-		`
-	const mySlider = new DoubleSlider(document.getElementById('my-slider'));
-
-	mySlider.addEventListener('slider:change', () => {
-	const {min, max} = mySlider.value;
-	console.log(`Min is: ${min}, max is: ${max}`);
-	});
-
-
-	
     var display = $('#main-display')
-	
-	
+    // Declare slider variable so that it can be used within the scope of the whole results() function.
+    var slider
+
     display.height(display.width() * 3 / 4)
 
     var scene = new three.Scene()
@@ -218,15 +193,27 @@ function results(){
     
     (async () => {
         frames = await processResults()
-		const {min, max} = mySlider.value;
-        resultsAnimate(frames, Number(min))
+    
+        // Create the slider after processResults() so we can just re-use the frames.length property.
+        display.append(
+        `<div name = 'frame-slider' id = "frame-slider"
+            data-min = "0"
+            data-max = ${frames.length - 1}
+            data-range = ${frames.length - 1}
+        ></div>`);
+
+        slider = new DoubleSlider(document.getElementById('frame-slider'));
+    
+        slider.addEventListener('slider:change', () => {
+            console.log(`Min is: ${slider.value.min}, max is: ${slider.value.max}`);
+        });
+        resultsAnimate(frames, Number(slider.value.min))
+
         controls.target = new three.Vector3(0, 0, frames.z_offset)
         plane.position.set(0, frames.y_offset, frames.z_offset)
         scene.add( plane );
     })()
 	
-	
-
     // This function needs to be defined inside the results() function 
     // so that it can access the variables in this results()'s scope.
     function resultsAnimate(frames, frame_number){
@@ -236,12 +223,11 @@ function results(){
         controls.update()
         setTimeout( () => {
             requestAnimationFrame( () => {
-				const {min, max} = mySlider.value;
-				if (frame_number < Number(max)){
+				if (frame_number < Number(slider.value.max)){
                     resultsAnimate(frames, frame_number + 1)
                 }
                 else {
-                    resultsAnimate(frames, Number(min))
+                    resultsAnimate(frames, Number(slider.value.min))
                 }
             })
         }, frame.time)
@@ -344,22 +330,6 @@ function processResults(){
         readStream.on('close', () => {
             frames.z_offset = frames.z_offset / total_joints
             resolve(frames)
-        })
-    })
-}
-
-async function processNumLines() {
-    return new Promise((resolve) => {
-        var readStream = readline.createInterface({
-            input: fs.createReadStream(current_patient.dir + 'raw_data.txt')
-        })        
-        var lOF = 0        
-        readStream.on('line', (line) => {
-            lOF++
-			console.log(`lineNum : ${lOF}`)
-        })
-        readStream.on('close', () => {
-            resolve(lOF)
         })
     })
 }
