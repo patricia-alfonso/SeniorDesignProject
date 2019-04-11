@@ -208,7 +208,7 @@ function results(){
         slider.addEventListener('slider:change', () => {
             console.log(`Min is: ${slider.value.min}, max is: ${slider.value.max}`);
         });
-        resultsAnimate(frames, Number(slider.value.min))
+
 
         //graph of shoulder_angle vs. frames
         display.append(
@@ -218,6 +218,7 @@ function results(){
         console.log(slider)
         var chart_data = await getChartData(frames, slider.range);
         var chart_y = await getChartY(frames, slider.range);
+		var Sholder_Angle_Cutoff = await getSholderAngleCutoff(slider.range);
         console.log(chart_y);
         var myChart = new Chart(ctx, {
             type: 'line',
@@ -226,10 +227,25 @@ function results(){
                 datasets: [{
                     data: chart_data,
                     label: 'Shoulder Angle',
+                    backgroundColor: 'rgb(100, 100, 100)',
+                    borderColor: 'rgb(100, 100, 100)',
+                    fill: false
+					},
+					{
+                    data: Sholder_Angle_Cutoff,
+                    label: 'Shoulder Angle cutoff',
                     backgroundColor: 'rgb(255, 99, 132)',
                     borderColor: 'rgb(255, 99, 132)',
                     fill: false
-                }]
+					},
+					{
+                    data: [{x:"0",y:"30"},{x:"0",y:"-30"}],
+                    label: "vertical line",
+                    backgroundColor: 'rgb(255, 99, 132)',
+                    borderColor: 'rgb(255, 99, 132)',
+                    fill: false
+					}
+				]
             },
             options: {
               title:{
@@ -245,7 +261,7 @@ function results(){
               }
             }
         });
-
+        resultsAnimate(frames, Number(slider.value.min), myChart)
         controls.target = new three.Vector3(0, 0, frames.z_offset)
         plane.position.set(0, frames.y_offset, frames.z_offset)
         scene.add( plane );
@@ -253,18 +269,23 @@ function results(){
 
     // This function needs to be defined inside the results() function
     // so that it can access the variables in this results()'s scope.
-    function resultsAnimate(frames, frame_number){
+    function resultsAnimate(frames, frame_number, chart){
         var frame = frames[frame_number]
         scene = addJoints(scene, frame)
         scene = addBones(scene, frame)
         controls.update()
+		chart.data.datasets[2].data[0]["x"] = frame_number
+		chart.data.datasets[2].data[1]["x"] = frame_number
+		
+		chart.update()
+		
         setTimeout( () => {
             requestAnimationFrame( () => {
 				if (frame_number < Number(slider.value.max)){
-                    resultsAnimate(frames, frame_number + 1)
+                    resultsAnimate(frames, frame_number + 1, chart)
                 }
                 else {
-                    resultsAnimate(frames, Number(slider.value.min))
+                    resultsAnimate(frames, Number(slider.value.min), chart)
                 }
             })
         }, frame.time)
@@ -283,6 +304,16 @@ function getChartData(frames, max){
     }
     resolve(chart_data)
   })
+}
+
+function getSholderAngleCutoff(max){
+  return new Promise((resolve) => {
+    var Sholder_Angle_Cutoff = []
+    for (var i=0; i<max; ++i){
+          Sholder_Angle_Cutoff.push("10")
+      }
+    resolve(Sholder_Angle_Cutoff)
+  })	
 }
 
 function getChartY(frames, max){
