@@ -6,6 +6,7 @@ var OrbitControls = require('three-orbitcontrols')
 var skip = require('./dev').skipToResults
 var fs = require('fs'),
     readline = require('readline')
+var Chart = require('chart.js')
 
 var state = 'start'
 var dir = './patients'
@@ -41,7 +42,7 @@ function update(){
     if (state == 'astra-done'){
         results()
     }
-    
+
     $('#quit').on('click', () => {
         ipcRenderer.send('quit')
     })
@@ -56,7 +57,7 @@ function start(){
     getPatientDirs()
 
     $('#title-text')[0].innerHTML = "Welcome to Astra Body Tracker"
-    
+
     $('#main-display')[0].innerHTML = `
     <div class="form-group">
         <label for="select-patient">Select Patient</label>
@@ -74,7 +75,7 @@ function start(){
         displayPatientName()
     })
     displayPatientName()
-    
+
     $('#start-astra').on('click', () => {
         console.log('start astra')
 
@@ -113,7 +114,7 @@ function waiting(){
     $('#title-text')[0].innerHTML = "Astra is running..."
 
     if (!fs.existsSync(current_patient.dir)){
-        fs.mkdirSync(current_patient.dir) 
+        fs.mkdirSync(current_patient.dir)
     }
 
     const body_tracker = spawn(".\\astra-body-tracker\\x64\\Debug\\astra-body-tracker.exe", [current_patient.dir])
@@ -190,10 +191,10 @@ function results(){
     var material = new three.MeshBasicMaterial( {color: 0x555555, side: three.DoubleSide} );
     var plane = new three.Mesh( geometry, material );
     plane.lookAt(0, 1, 0);
-    
+
     (async () => {
         frames = await processResults()
-    
+
         // Create the slider after processResults() so we can just re-use the frames.length property.
         display.append(
         `<div name = 'frame-slider' id = "frame-slider"
@@ -203,18 +204,54 @@ function results(){
         ></div>`);
 
         slider = new DoubleSlider(document.getElementById('frame-slider'));
-    
+
         slider.addEventListener('slider:change', () => {
             console.log(`Min is: ${slider.value.min}, max is: ${slider.value.max}`);
         });
         resultsAnimate(frames, Number(slider.value.min))
 
+        //graph of shoulder_angle vs. frames
+        display.append(
+          '<canvas id="shoulder_chart" width="400" height="400"></canvas>'
+        );
+        var ctx = document.getElementById('shoulder_chart').getContext('2d');
+        console.log(slider)
+        var chart_data = await getChartData(frames, slider.range);
+        var chart_y = await getChartY(frames, slider.range);
+        console.log(chart_y);
+        var myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+              labels: chart_y,
+                datasets: [{
+                    data: chart_data,
+                    label: 'Shoulder Angle',
+                    backgroundColor: 'rgb(255, 99, 132)',
+                    borderColor: 'rgb(255, 99, 132)',
+                    fill: false
+                }]
+            },
+            options: {
+              title:{
+                display: true,
+                text: 'Shoulder Angle'
+              },
+              scales: {
+                yAxes: [{
+                  ticks: {
+                    beginAtZero: true
+                  }
+                }]
+              }
+            }
+        });
+
         controls.target = new three.Vector3(0, 0, frames.z_offset)
         plane.position.set(0, frames.y_offset, frames.z_offset)
         scene.add( plane );
     })()
-	
-    // This function needs to be defined inside the results() function 
+
+    // This function needs to be defined inside the results() function
     // so that it can access the variables in this results()'s scope.
     function resultsAnimate(frames, frame_number){
         var frame = frames[frame_number]
@@ -235,11 +272,37 @@ function results(){
     }
 }
 
+function getChartData(frames, max){
+
+  return new Promise((resolve) => {
+    var chart_data = []
+    for (var i=0; i <= max; ++i){
+      if (frames[i]["shoulder_angle"]){
+          chart_data.push({"x": i, "y": frames[i]["shoulder_angle"]})
+      }
+    }
+    resolve(chart_data)
+  })
+}
+
+function getChartY(frames, max){
+  return new Promise((resolve) => {
+    var chart_y = []
+    for (var i=0; i<=max; ++i){
+      if (frames[i]["shoulder_angle"]){
+        m = i.toString()
+          chart_y.push(m)
+      }
+    }
+    resolve(chart_y)
+  })
+}
+
 function addJoints(scene, frame){
     var geometry = new three.SphereGeometry(30)
     var material = new three.MeshBasicMaterial( { color: 'white' } )
     var joints = frame.joints
-    
+
     for (var joint in joints){
         scene.remove(scene.getObjectByName(joint))
         var point
@@ -262,17 +325,17 @@ function addBones(scene, frame){
     while (scene.getObjectByName("bone")){
         scene.remove(scene.getObjectByName("bone"))
     }
-    
+
     var createBone = (joint1, joint2) => {
         if (joint1 && joint2){
             var point1 = new three.Vector3(joint1.x, joint1.y, joint1.z)
             var point2 = new three.Vector3(joint2.x, joint2.y, joint2.z)
             var direction = new three.Vector3().subVectors(point2, point1)
             var helper = new three.ArrowHelper(direction.clone().normalize(), point1);
-    
+
             var geometry = new three.CylinderGeometry(15, 15, direction.length(), 3, 1)
             var bone = new three.Mesh(geometry, new three.MeshBasicMaterial( { color: 'white' } ))
-    
+
             bone.setRotationFromEuler(new three.Euler().setFromQuaternion(helper.quaternion))
             bone.position.set((point1.x + point2.x) / 2, (point1.y + point2.y) / 2, (point1.z + point2.z) / 2)
             bone.name = "bone"
@@ -307,13 +370,13 @@ function processResults(){
         var readStream = readline.createInterface({
             input: fs.createReadStream(current_patient.dir + 'raw_data.txt')
         })
-        
+
         var frames = {}
         frames.length = 0
         frames.z_offset = 0
         frames.y_offset = 0
         var total_joints = 0
-        
+
         readStream.on('line', (line) => {
             var frame = JSON.parse(line)
             frames[frames.length] = frame
