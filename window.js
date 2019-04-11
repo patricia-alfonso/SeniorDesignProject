@@ -274,8 +274,8 @@ function results(){
         scene = addJoints(scene, frame)
         scene = addBones(scene, frame)
         controls.update()
-		chart.data.datasets[2].data[0]["x"] = frame_number
-		chart.data.datasets[2].data[1]["x"] = frame_number
+		chart.data.datasets[2].data[0]["x"] = frame_number.toString()
+		chart.data.datasets[2].data[1]["x"] = frame_number.toString()
 		
 		chart.update()
 		
