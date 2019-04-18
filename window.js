@@ -198,8 +198,6 @@ function results(){
 
     (async () => {
         frames = await processResults()
-		averages_Shoulder_Angles = await getAverages(frames, frames.length-1)
-
         // Create the slider after processResults() so we can just re-use the frames.length property.
         display.append(
         `<div name = 'frame-slider' id = "frame-slider"
@@ -209,31 +207,33 @@ function results(){
         ></div>`);
 
         slider = new DoubleSlider(document.getElementById('frame-slider'));
-		var avg_shoulder_angle = averages_Shoulder_Angles[slider.value.min][slider.value.max]
+		var avg_shoulder_angle = await getAverage(frames, slider.value.min, slider.value.max)
 		var avg_shoulder_result = "Average Shoulder Angle: " + avg_shoulder_angle
 
         slider.addEventListener('slider:change', () => {
             console.log(`Min is: ${slider.value.min}, max is: ${slider.value.max}`);
-			var avg_shoulder_angle = averages_Shoulder_Angles[slider.value.min][slider.value.max]
-			avg_shoulder_result = "Average Shoulder Angle: " + avg_shoulder_angle
-			document.getElementById("avg_shoulder").innerHTML = avg_shoulder_result
-			if(avg_shoulder_angle > shoulder_cutoff){
-				document.getElementById("Yes_No_MayBe").innerHTML = Yes_No_Maybe_result[0]
-				document.getElementById("Yes_No_MayBe").style.color = Yes_No_MayBe_colors[0]
-				document.getElementById("avg_shoulder").style.color = Yes_No_MayBe_colors[0]
-			}
-			else{
-				if(avg_shoulder_angle > shoulder_cutoff - mayBeCutoff){
-					document.getElementById("Yes_No_MayBe").innerHTML = Yes_No_Maybe_result[2]
-					document.getElementById("Yes_No_MayBe").style.color = Yes_No_MayBe_colors[2]
-					document.getElementById("avg_shoulder").style.color = Yes_No_MayBe_colors[2]
+			(async () => { 
+				avg_shoulder_angle = await getAverage(frames, slider.value.min, slider.value.max) 
+				avg_shoulder_result = "Average Shoulder Angle: " + avg_shoulder_angle
+				document.getElementById("avg_shoulder").innerHTML = avg_shoulder_result
+				if(avg_shoulder_angle > shoulder_cutoff){
+					document.getElementById("Yes_No_MayBe").innerHTML = Yes_No_Maybe_result[0]
+					document.getElementById("Yes_No_MayBe").style.color = Yes_No_MayBe_colors[0]
+					document.getElementById("avg_shoulder").style.color = Yes_No_MayBe_colors[0]
 				}
 				else{
-					document.getElementById("Yes_No_MayBe").innerHTML = Yes_No_Maybe_result[1]
-					document.getElementById("Yes_No_MayBe").style.color = Yes_No_MayBe_colors[1]
-					document.getElementById("avg_shoulder").style.color = Yes_No_MayBe_colors[1]
+					if(avg_shoulder_angle > shoulder_cutoff - mayBeCutoff){
+						document.getElementById("Yes_No_MayBe").innerHTML = Yes_No_Maybe_result[2]
+						document.getElementById("Yes_No_MayBe").style.color = Yes_No_MayBe_colors[2]
+						document.getElementById("avg_shoulder").style.color = Yes_No_MayBe_colors[2]
+					}
+					else{
+						document.getElementById("Yes_No_MayBe").innerHTML = Yes_No_Maybe_result[1]
+						document.getElementById("Yes_No_MayBe").style.color = Yes_No_MayBe_colors[1]
+						document.getElementById("avg_shoulder").style.color = Yes_No_MayBe_colors[1]
+					}
 				}
-			}
+			})()
 				
         });
 
@@ -245,6 +245,10 @@ function results(){
         var ctx = document.getElementById('shoulder_chart').getContext('2d');
         var chart_data = await getChartData(frames, slider.range);
         var chart_y = await getChartY(frames, slider.range);
+		var max_cur_frame = (await get_max_angle(frames)).toString()
+		var data1_value = await getHorizontalChart(frames, slider.range, shoulder_cutoff.toString())
+//		data1_value.push({x:0, y:shoulder_cutoff.toString()})		
+//		data1_value.push({x:(frames.length - 1).toString(), y:shoulder_cutoff.toString()})
         var myChart = new Chart(ctx, {
             type: 'line',
             data: {
@@ -257,14 +261,15 @@ function results(){
                     fill: false
 					},
 					{
-					data:[{x:"0", y:shoulder_cutoff.toString()},{x:slider.range.toString(), y:shoulder_cutoff.toString()}],
+					data: data1_value,
+					//[{x:slider.range.toString(), y:shoulder_cutoff.toString()},{x:"0", y:shoulder_cutoff.toString()}],
                     label: 'Shoulder Angle cutoff',
                     backgroundColor: 'rgb(255, 0, 0)',
                     borderColor: 'rgb(255, 0, 0)',
                     fill: false
 					},
 					{
-                    data: [{x:"0",y:"30"},{x:"0",y:"-5"}],
+                    data: [{x:"0",y:max_cur_frame},{x:"0",y:"-10"}],
                     label: "Current Frame",
                     backgroundColor: 'rgb(255, 99, 132)',
                     borderColor: 'rgb(255, 99, 132)',
@@ -358,7 +363,20 @@ function getChartData(frames, max){
     resolve(chart_data)
   })
 }
-
+function get_max_angle(frames){
+  return new Promise((resolve) => {
+    var max_cur_frame = 0
+    for (var i=0; i<=frames.length-1; ++i){
+	  if(i > 271){	console.log(`max curent Frame > 50: ${Math.abs(frames[i]["shoulder_angle"])}, ${max_cur_frame}`)}
+      if (Math.abs(frames[i]["shoulder_angle"]) > max_cur_frame){
+        max_cur_frame = Math.abs(frames[i]["shoulder_angle"])
+      }
+    }
+	max_cur_frame = Math.ceil(max_cur_frame / 10) * 10;
+//	console.log(`max curent Frame: ${max_cur_frame}`)
+    resolve(max_cur_frame)
+  })
+}
 function getChartY(frames, max){
   return new Promise((resolve) => {
     var chart_y = []
@@ -372,30 +390,32 @@ function getChartY(frames, max){
   })
 }
 
-function getAverages(frames, range){
+function getHorizontalChart(frames, max, cutoff){
   return new Promise((resolve) => {
-    var averages_Shoulder_Angles = []
-    for (var i=0; i<=range; i++){
-		var a = []
-		averages_Shoulder_Angles.push(a)
-		for(var j = 0; j <= range; j++){
-			if(i>j){
-				averages_Shoulder_Angles[i].push("null")
-			}
-			else{
-				// get average shoulder angle for range of i to j
-				var avg = Math.abs(frames[j]["shoulder_angle"])
-				if(avg == 'NaN'){avg = 0}
-				if(i == j){
-					averages_Shoulder_Angles[i].push(avg)
-				}
-				else{
-					averages_Shoulder_Angles[i].push( ((averages_Shoulder_Angles[i][j-1] * (j-i) ) + avg ) / (j-i+1) )
-				}
-			}
-		}
+    var chart_Horizontal_data = []
+    for (var i=0; i<=max; ++i){
+      if (frames[i]["shoulder_angle"]){
+      chart_Horizontal_data.push({x:i, y:cutoff})
       }
-    resolve(averages_Shoulder_Angles)
+    }
+    resolve(chart_Horizontal_data)
+  })
+}
+
+function getAverage(frames, min, max){
+  return new Promise((resolve) => {
+	var sum = 0
+	var range = 0
+	var cur_angle = 0
+    for (var i=min; i<=max; ++i){
+		cur_angle = Math.abs(frames[i]["shoulder_angle"])
+		if(cur_angle){
+			sum += Math.abs(cur_angle)
+			range += 1
+		}
+	}
+	var average_shoulder_angle = sum / range
+    resolve(average_shoulder_angle)
   })
 	
 }
