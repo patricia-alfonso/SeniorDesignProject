@@ -166,12 +166,20 @@ function results(){
 	var mayBeCutoff = 5
 	var Yes_No_Maybe_result = ["Please Retake test, There is a possibility of Scoliosis", "There are currently No signs of Scoliosis", "Uncertian, Please re-take the test" ]
 	var Yes_No_MayBe_colors = ["red", "green", "blue"]
+	
     $('#title-text')[0].innerHTML = "Astra Results: " + current_patient.name
     var display = $('#main-display')
     // Declare slider variable so that it can be used within the scope of the whole results() function.
+	var display2 = $('#graph')
+	display2.append('<canvas id="shoulder_chart" width="400" height="400"></canvas>')
+	
+	var display3 = $('#slider-bar')
+
     var slider
 
     display.height(display.width() * 3 / 4)
+//	display3.height = display.height()
+//	display3.width(display.height() * 2/ 4)
 
     var scene = new three.Scene()
     var camera = new three.PerspectiveCamera(49.5, 4/3, 0.1, 8000)
@@ -199,7 +207,7 @@ function results(){
     (async () => {
         frames = await processResults()
         // Create the slider after processResults() so we can just re-use the frames.length property.
-        display.append(
+        display3.append(
         `<div name = 'frame-slider' id = "frame-slider"
             data-min = "0"
             data-max = ${frames.length - 1}
@@ -238,10 +246,6 @@ function results(){
         });
 
 
-        //graph of shoulder_angle vs. frames
-        display.append(
-          '<canvas id="shoulder_chart" width="400" height="400"></canvas>'
-        );
         var ctx = document.getElementById('shoulder_chart').getContext('2d');
         var chart_data = await getChartData(frames, slider.range);
         var chart_y = await getChartY(frames, slider.range);
@@ -304,7 +308,7 @@ function results(){
 				yesNoMaybe = 1
 			}
 		}
-		display.append(
+		display3.append(
         `<div id = 'avg_shoulder'>${avg_shoulder_result}</div>
 		<div id = 'Yes_No_MayBe'>${Yes_No_Maybe_result[yesNoMaybe]}</div>`)
 		
