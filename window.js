@@ -11,8 +11,6 @@ var Chart = require('chart.js')
 var state = 'start'
 var dir = './patients'
 var patient_dirs, current_patient
-// DEV ONLY
-var {state, current_patient} = skip()
 
 getPatientDirs()
 
@@ -64,7 +62,8 @@ function start(){
         <select class="form-control" id="select-patient"></select>
         <input class="form-control" type="text" placeholder="Patient Name" id="patient-name">
     </div>
-    <button type="button" class="btn btn-primary btn-lg btn-block" id="start-astra">Start Astra</button>`
+    <button type="button" class="btn btn-primary btn-lg btn-block" id="start-astra">Start Astra</button>
+    <button type="button" class="btn btn-primary btn-lg btn-block" id="load-data">Load Old Data</button>`
 
     for (patient of patient_dirs){
         $('#select-patient').append("<option>" + patient + "</option>")
@@ -73,8 +72,10 @@ function start(){
 
     $('#select-patient').on('change', () => {
         displayPatientName()
+        displayLoadData()
     })
     displayPatientName()
+    displayLoadData()
 
     $('#start-astra').on('click', () => {
         console.log('start astra')
@@ -99,6 +100,15 @@ function start(){
         state = 'astra-running'
         update()
     })
+
+    $('#load-data').on('click', () => {
+        state = 'astra-done'
+        current_patient = {
+            "name": $('#select-patient')[0].value,
+            "dir": dir + '/' + $('#select-patient')[0].value + '/'
+        }
+        update()
+    })
 }
 
 function displayPatientName(){
@@ -107,6 +117,15 @@ function displayPatientName(){
     }
     else {
         $('#patient-name').hide()
+    }
+}
+
+function displayLoadData(){
+    if ($('#select-patient')[0].value === "Create New Patient"){
+        $('#load-data').hide()
+    }
+    else {
+        $('#load-data').show()
     }
 }
 
@@ -222,7 +241,7 @@ function results(){
         var myChart = new Chart(ctx, {
             type: 'line',
             data: {
-              labels: chart_y,
+                labels: chart_y,
                 datasets: [{
                     data: chart_data,
                     label: 'Shoulder Angle',
