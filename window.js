@@ -12,7 +12,7 @@ var state = 'start'
 var dir = './patients'
 var patient_dirs, current_patient
 // DEV ONLY
-var {state, current_patient} = skip()
+//var {state, current_patient} = skip()
 
 getPatientDirs()
 
@@ -55,7 +55,20 @@ function update(){
 
 function start(){
     getPatientDirs()
-
+	$('#page-container')[0].innerHTML =
+`
+	<div class="row flex-xl-nowrap h-100">
+		<div class="col-1 sidebar"></div>	                
+		<main class="col-10" role="main">	
+			<h1 id="title-text"></h1>	
+			<div id="main-display">	                    
+				<p>main display</p>	                      
+			</div>	                  
+		</main>	                
+		<div class="col-1"></div>
+	</div>	
+`	
+	
     $('#title-text')[0].innerHTML = "Welcome to Astra Body Tracker"
 
     $('#main-display')[0].innerHTML = `
@@ -166,7 +179,23 @@ function results(){
 	var mayBeCutoff = 5
 	var Yes_No_Maybe_result = ["Please Retake test, There is a possibility of Scoliosis", "There are currently No signs of Scoliosis", "Uncertian, Please re-take the test" ]
 	var Yes_No_MayBe_colors = ["red", "green", "blue"]
-	
+	$('#page-container')[0].innerHTML =
+`
+	<h1 id="title-text"></h1>
+	<div class="row flex-xl-nowrap h-100" id = "outer-row">
+		<main class="col-5" role="main">
+			<div id="main-display">	</div>
+		</main>
+		<div class = col-1></div>
+		<div class="col-5">
+			<div id = "graph"></div>
+		</div>
+	</div>
+	<div class = "row">
+		<div class = "col-1"></div>
+		<div class = "col-10" id = "slider-bar"></div>
+	</div>
+`	
     $('#title-text')[0].innerHTML = "Astra Results: " + current_patient.name
     var display = $('#main-display')
     // Declare slider variable so that it can be used within the scope of the whole results() function.
@@ -371,7 +400,6 @@ function get_max_angle(frames){
   return new Promise((resolve) => {
     var max_cur_frame = 0
     for (var i=0; i<=frames.length-1; ++i){
-	  if(i > 271){	console.log(`max curent Frame > 50: ${Math.abs(frames[i]["shoulder_angle"])}, ${max_cur_frame}`)}
       if (Math.abs(frames[i]["shoulder_angle"]) > max_cur_frame){
         max_cur_frame = Math.abs(frames[i]["shoulder_angle"])
       }
