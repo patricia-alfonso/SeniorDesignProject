@@ -69,7 +69,7 @@ function start(){
 	</div>	
 `	
 	
-    $('#title-text')[0].innerHTML = "Welcome to Astra Body Tracker"
+    $('#title-text')[0].innerHTML = "Welcome to Body Tracker"
 
     $('#main-display')[0].innerHTML = `
     <div class="form-group">
@@ -77,7 +77,7 @@ function start(){
         <select class="form-control" id="select-patient"></select>
         <input class="form-control" type="text" placeholder="Patient Name" id="patient-name">
     </div>
-    <button type="button" class="btn btn-primary btn-lg btn-block" id="start-astra">Start Astra</button>
+    <button type="button" class="btn btn-primary btn-lg btn-block" id="start-astra">Start Body Tracker</button>
     <button type="button" class="btn btn-primary btn-lg btn-block" id="load-data">Load Old Data</button>`
 
     for (patient of patient_dirs){
@@ -145,7 +145,7 @@ function displayLoadData() {
 }
 
 function waiting(){
-    $('#title-text')[0].innerHTML = "Astra is running..."
+    $('#title-text')[0].innerHTML = "Body Tracker is running..."
 
     if (!fs.existsSync(current_patient.dir)){
         fs.mkdirSync(current_patient.dir)
@@ -225,7 +225,7 @@ function results(){
 		<div class = "col-10" id = "slider-bar"></div>
 	</div>
 `	
-    $('#title-text')[0].innerHTML = "Astra Results: " + current_patient.name
+    $('#title-text')[0].innerHTML = "Results: " + current_patient.name
     var display = $('#main-display')
     // Declare slider variable so that it can be used within the scope of the whole results() function.
 	var display2 = $('#graph')
