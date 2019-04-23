@@ -168,15 +168,23 @@ function waiting(){
     resultsAnimate()
 
     body_tracker.stdout.on('data', (data) => {
-        frame = JSON.parse(data)
-        for (joint in frame.joints){
-            if (frame.joints[joint].z <= 400){
-                delete frame.joints[joint]
-            }
-        }
-        fs.appendFileSync(current_patient.dir + "raw_data.txt", JSON.stringify(frame) + "\n")
-        scene = addJoints(scene, frame)
-        scene = addBones(scene, frame)
+		
+		var last_i = 0
+		for (var i = 0; i < data.length; i++){
+			if (String.fromCharCode(data[i]) == "\n"){
+				//console.log("endline")
+				frame = JSON.parse(data.slice(last_i, i))
+				last_i = i
+				for (joint in frame.joints){
+					if (frame.joints[joint].z <= 400){
+						delete frame.joints[joint]
+					}
+				}
+				fs.appendFileSync(current_patient.dir + "raw_data.txt", JSON.stringify(frame) + "\n")
+				scene = addJoints(scene, frame)
+				scene = addBones(scene, frame)
+			}
+		}
     })
 
     $('#astra-exit').on('click', () => {
