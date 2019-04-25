@@ -482,69 +482,82 @@ function getAverage(frames, min, max){
 }
 
 function addJoints(scene, frame){
-    var geometry = new three.SphereGeometry(30)
-    var material = new three.MeshBasicMaterial( { color: 'white' } )
+    var mat, geo
     var joints = frame.joints
 
     for (var joint in joints){
-        scene.remove(scene.getObjectByName(joint))
-        var point
-        if (joint == "Head"){
-            var mat = new three.MeshBasicMaterial( { color: 'red' } )
-            var geo = new three.SphereGeometry(50)
+        var point = scene.getObjectByName(joint)
+        if (!point){
+            if (joint == "Head"){
+                mat = new three.MeshBasicMaterial( { color: 'red' } )
+                geo = new three.SphereGeometry(50)
+            }
+            else {
+                geo = new three.SphereGeometry(30)
+                mat = new three.MeshBasicMaterial( { color: 'white' } )
+            }
             point = new three.Mesh(geo, mat)
-        }
-        else {
-            point = new three.Mesh(geometry, material)
+            point.name = joint
+            scene.add(point)
         }
         point.position.set(joints[joint].x, joints[joint].y, joints[joint].z)
-        point.name = joint
-        scene.add(point)
     }
     return scene
 }
 
 function addBones(scene, frame){
-    while (scene.getObjectByName("bone")){
-        scene.remove(scene.getObjectByName("bone"))
-    }
 
-    var createBone = (joint1, joint2) => {
+    var createBone = (joint1, joint2, name) => {
         if (joint1 && joint2){
+            var mesh = scene.getObjectByName(name)
+            if (mesh){
+                mesh.geometry.dispose()
+                scene.remove(mesh)
+            }
             var point1 = new three.Vector3(joint1.x, joint1.y, joint1.z)
             var point2 = new three.Vector3(joint2.x, joint2.y, joint2.z)
             var direction = new three.Vector3().subVectors(point2, point1)
             var helper = new three.ArrowHelper(direction.clone().normalize(), point1);
 
-            var geometry = new three.CylinderGeometry(15, 15, direction.length(), 3, 1)
-            var bone = new three.Mesh(geometry, new three.MeshBasicMaterial( { color: 'white' } ))
+            var geo = new three.CylinderGeometry(15, 15, direction.length(), 3, 1)
+            var mat = new three.MeshBasicMaterial( { color: 'white' } )
+            var bone = new three.Mesh(geo, mat)
+            var euler = new three.Euler().setFromQuaternion(helper.quaternion)
 
-            bone.setRotationFromEuler(new three.Euler().setFromQuaternion(helper.quaternion))
+            bone.setRotationFromEuler(euler)
             bone.position.set((point1.x + point2.x) / 2, (point1.y + point2.y) / 2, (point1.z + point2.z) / 2)
-            bone.name = "bone"
+            bone.name = name
             scene.add(bone)
+
+            /*point1 = null
+            point2 = null
+            direction = null
+            helper = null
+            euler = null
+            bone = null
+            geo = null*/
         }
     }
     var joints = frame.joints
-    createBone(joints.Head, joints.Neck)
-    createBone(joints.Neck, joints["Spine Top"])
-    createBone(joints["Spine Top"], joints["Spine Middle"])
-    createBone(joints["Spine Middle"], joints["Spine Base"])
-    createBone(joints["Spine Top"], joints["Left Shoulder"])
-    createBone(joints["Spine Top"], joints["Right Shoulder"])
-    createBone(joints["Left Shoulder"], joints["Left Elbow"])
-    createBone(joints["Left Elbow"], joints["Left Wrist"])
-    createBone(joints["Left Wrist"], joints["Left Hand"])
-    createBone(joints["Right Shoulder"], joints["Right Elbow"])
-    createBone(joints["Right Elbow"], joints["Right Wrist"])
-    createBone(joints["Right Wrist"], joints["Right Hand"])
-    createBone(joints["Spine Base"], joints["Left Hip"])
-    createBone(joints["Spine Base"], joints["Right Hip"])
-    createBone(joints["Left Hip"], joints["Left Knee"])
-    createBone(joints["Left Knee"], joints["Left Foot"])
-    createBone(joints["Right Hip"], joints["Right Knee"])
-    createBone(joints["Right Knee"], joints["Right Foot"])
-
+    createBone(joints.Head, joints.Neck, "HeadNeck")
+    createBone(joints.Neck, joints["Spine Top"], "NeckSpine Top")
+    createBone(joints["Spine Top"], joints["Spine Middle"], "Spine TopSpine Middle")
+    createBone(joints["Spine Middle"], joints["Spine Base"], "Spine MiddleSpine Base")
+    createBone(joints["Spine Top"], joints["Left Shoulder"], "Spine TopLeft Shoulder")
+    createBone(joints["Spine Top"], joints["Right Shoulder"], "Spine TopRight Shoulder")
+    createBone(joints["Left Shoulder"], joints["Left Elbow"], "Left ShoulderLeft Elbow")
+    createBone(joints["Left Elbow"], joints["Left Wrist"], "Left ElbowLeft Wrist")
+    createBone(joints["Left Wrist"], joints["Left Hand"], "Left WristLeft Hand")
+    createBone(joints["Right Shoulder"], joints["Right Elbow"], "Right ShoulderRight Elbow")
+    createBone(joints["Right Elbow"], joints["Right Wrist"], "Right ElbowRight Wrist")
+    createBone(joints["Right Wrist"], joints["Right Hand"], "Right WristRight Hand")
+    createBone(joints["Spine Base"], joints["Left Hip"], "Spine BaseLeft Hip")
+    createBone(joints["Spine Base"], joints["Right Hip"], "Spine BaseRight Hip")
+    createBone(joints["Left Hip"], joints["Left Knee"], "Left HipLeft Knee")
+    createBone(joints["Left Knee"], joints["Left Foot"], "Left KneeLeft Foot")
+    createBone(joints["Right Hip"], joints["Right Knee"], "Right HipRight Knee")
+    createBone(joints["Right Knee"], joints["Right Foot"], "Right KneeRight Foot")
+    
     return scene
 }
 
