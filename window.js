@@ -234,6 +234,7 @@ function results(){
 	var display3 = $('#slider-bar')
 
     var slider
+    var frames, frame_number
 
     display.height(display.width() * 3 / 4)
 //	display3.height = display.height()
@@ -261,6 +262,7 @@ function results(){
     var material = new three.MeshBasicMaterial( {color: 0x555555, side: three.DoubleSide} );
     var plane = new three.Mesh( geometry, material );
     plane.lookAt(0, 1, 0);
+    var chart
 
     (async () => {
         frames = await processResults()
@@ -274,33 +276,33 @@ function results(){
 
         slider = new DoubleSlider(document.getElementById('frame-slider'));
 		var avg_shoulder_angle = await getAverage(frames, slider.value.min, slider.value.max)
-		var avg_shoulder_result = "Average Shoulder Angle: " + avg_shoulder_angle
+        var avg_shoulder_result = "Average Shoulder Angle: " + avg_shoulder_angle
+        var setAverage = (async () => {
+            var avg_shoulder_angle = await getAverage(frames, slider.value.min, slider.value.max) 
+            var avg_shoulder_result = "Average Shoulder Angle: " + avg_shoulder_angle
+            document.getElementById("avg_shoulder").innerHTML = avg_shoulder_result
+            if(avg_shoulder_angle > shoulder_cutoff){
+                document.getElementById("Yes_No_MayBe").innerHTML = Yes_No_Maybe_result[0]
+                document.getElementById("Yes_No_MayBe").style.color = Yes_No_MayBe_colors[0]
+                document.getElementById("avg_shoulder").style.color = Yes_No_MayBe_colors[0]
+            }
+            else{
+                if(avg_shoulder_angle > shoulder_cutoff - mayBeCutoff){
+                    document.getElementById("Yes_No_MayBe").innerHTML = Yes_No_Maybe_result[2]
+                    document.getElementById("Yes_No_MayBe").style.color = Yes_No_MayBe_colors[2]
+                    document.getElementById("avg_shoulder").style.color = Yes_No_MayBe_colors[2]
+                }
+                else{
+                    document.getElementById("Yes_No_MayBe").innerHTML = Yes_No_Maybe_result[1]
+                    document.getElementById("Yes_No_MayBe").style.color = Yes_No_MayBe_colors[1]
+                    document.getElementById("avg_shoulder").style.color = Yes_No_MayBe_colors[1]
+                }
+            }
+        })
 
         slider.addEventListener('slider:change', () => {
             console.log(`Min is: ${slider.value.min}, max is: ${slider.value.max}`);
-			(async () => { 
-				avg_shoulder_angle = await getAverage(frames, slider.value.min, slider.value.max) 
-				avg_shoulder_result = "Average Shoulder Angle: " + avg_shoulder_angle
-				document.getElementById("avg_shoulder").innerHTML = avg_shoulder_result
-				if(avg_shoulder_angle > shoulder_cutoff){
-					document.getElementById("Yes_No_MayBe").innerHTML = Yes_No_Maybe_result[0]
-					document.getElementById("Yes_No_MayBe").style.color = Yes_No_MayBe_colors[0]
-					document.getElementById("avg_shoulder").style.color = Yes_No_MayBe_colors[0]
-				}
-				else{
-					if(avg_shoulder_angle > shoulder_cutoff - mayBeCutoff){
-						document.getElementById("Yes_No_MayBe").innerHTML = Yes_No_Maybe_result[2]
-						document.getElementById("Yes_No_MayBe").style.color = Yes_No_MayBe_colors[2]
-						document.getElementById("avg_shoulder").style.color = Yes_No_MayBe_colors[2]
-					}
-					else{
-						document.getElementById("Yes_No_MayBe").innerHTML = Yes_No_Maybe_result[1]
-						document.getElementById("Yes_No_MayBe").style.color = Yes_No_MayBe_colors[1]
-						document.getElementById("avg_shoulder").style.color = Yes_No_MayBe_colors[1]
-					}
-				}
-			})()
-				
+            setAverage()
         });
 
 
@@ -311,7 +313,7 @@ function results(){
 		var data1_value = await getHorizontalChart(frames, slider.range, shoulder_cutoff.toString())
 //		data1_value.push({x:0, y:shoulder_cutoff.toString()})		
 //		data1_value.push({x:(frames.length - 1).toString(), y:shoulder_cutoff.toString()})
-        var myChart = new Chart(ctx, {
+        chart = new Chart(ctx, {
             type: 'line',
             data: {
               labels: chart_y,
@@ -372,8 +374,9 @@ function results(){
 		
 		document.getElementById("Yes_No_MayBe").style.color = Yes_No_MayBe_colors[yesNoMaybe]
 		document.getElementById("avg_shoulder").style.color = Yes_No_MayBe_colors[yesNoMaybe]
-		
-        resultsAnimate(frames, Number(slider.value.min), myChart)
+        
+        frame_number = Number(slider.value.min)
+        resultsAnimate()
         controls.target = new three.Vector3(0, 0, frames.z_offset)
         plane.position.set(0, frames.y_offset, frames.z_offset)
         scene.add( plane );
@@ -381,10 +384,9 @@ function results(){
 
     // This function needs to be defined inside the results() function
     // so that it can access the variables in this results()'s scope.
-    function resultsAnimate(frames, frame_number, chart){
-        var frame = frames[frame_number]
-        scene = addJoints(scene, frame)
-        scene = addBones(scene, frame)
+    function resultsAnimate(){
+        scene = addJoints(scene, frames[frame_number])
+        scene = addBones(scene, frames[frame_number])
         controls.update()
 		chart.data.datasets[2].data[0]["x"] = frame_number.toString()
 		chart.data.datasets[2].data[1]["x"] = frame_number.toString()
@@ -397,18 +399,20 @@ function results(){
 			chart.data.datasets[2].borderColor = 'rgb(0,255,0)'			
 		}
 		
-		chart.update()
+        chart.update()
 		
         setTimeout( () => {
-            requestAnimationFrame( () => {
-				if (frame_number < Number(slider.value.max)){
-                    resultsAnimate(frames, frame_number + 1, chart)
+            requestAnimationFrame(() => {
+                if (frame_number < Number(slider.value.max)){
+                    frame_number += 1
+                    resultsAnimate()
                 }
                 else {
-                    resultsAnimate(frames, Number(slider.value.min), chart)
+                    frame_number = Number(slider.value.min)
+                    resultsAnimate()
                 }
             })
-        }, frame.time)
+        }, frames[frame_number].time)
         renderer.render(scene, camera)
     }
 }
@@ -482,24 +486,28 @@ function getAverage(frames, min, max){
 }
 
 function addJoints(scene, frame){
-    var mat, geo
     var joints = frame.joints
 
     for (var joint in joints){
         var point = scene.getObjectByName(joint)
-        if (!point){
-            if (joint == "Head"){
-                mat = new three.MeshBasicMaterial( { color: 'red' } )
-                geo = new three.SphereGeometry(50)
-            }
-            else {
-                geo = new three.SphereGeometry(30)
-                mat = new three.MeshBasicMaterial( { color: 'white' } )
-            }
-            point = new three.Mesh(geo, mat)
-            point.name = joint
-            scene.add(point)
+        var mat, geo
+        if (point){
+            point.geometry.dispose()
+            scene.remove(point)
         }
+
+        if (joint == "Head"){
+            mat = new three.MeshBasicMaterial( { color: 'red' } )
+            geo = new three.SphereGeometry(50)
+        }
+        else {
+            geo = new three.SphereGeometry(30)
+            mat = new three.MeshBasicMaterial( { color: 'white' } )
+        }
+        point = new three.Mesh(geo, mat)
+        point.name = joint
+        scene.add(point)
+        
         point.position.set(joints[joint].x, joints[joint].y, joints[joint].z)
     }
     return scene
@@ -528,14 +536,6 @@ function addBones(scene, frame){
             bone.position.set((point1.x + point2.x) / 2, (point1.y + point2.y) / 2, (point1.z + point2.z) / 2)
             bone.name = name
             scene.add(bone)
-
-            /*point1 = null
-            point2 = null
-            direction = null
-            helper = null
-            euler = null
-            bone = null
-            geo = null*/
         }
     }
     var joints = frame.joints
